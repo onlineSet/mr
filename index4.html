@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A curated high-quality photo gallery featuring over 100 stunning images from nature, architecture, and abstract categories. Explore photography in high resolution.">
+    <meta name="keywords" content="photo gallery, photography, images, responsive design, web animation, seo friendly">
+    <meta name="author" content="Front-End Designer">
+    <title>Lumina | High-Performance Photo Gallery</title>
+
+    <!-- Google Fonts for Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS Variables & Reset --- */
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d23;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --transition-speed: 0.3s;
+            --font-main: 'Inter', sans-serif;
+            --gap-size: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Header & Navigation --- */
+        header {
+            text-align: center;
+            padding: 80px 20px 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-out;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- Filter Controls (Visual Only for Demo) --- */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: var(--text-secondary);
+            padding: 8px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active, .filter-btn:hover {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border-color: var(--text-primary);
+        }
+
+        /* --- Gallery Grid --- */
+        .gallery-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px 100px;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--gap-size);
+        }
+
+        /* --- Photo Card --- */
+        .photo-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+            opacity: 0; /* Hidden initially for scroll animation */
+            transform: translateY(30px);
+        }
+
+        .photo-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .photo-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            z-index: 2;
+        }
+
+        /* Image Wrapper to maintain aspect ratio */
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 66.66%; /* 3:2 Aspect Ratio */
+            overflow: hidden;
+        }
+
+        .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .photo-card:hover .image-wrapper img {
+            transform: scale(1.08);
+        }
+
+        /* Overlay Icon */
+        .overlay-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            color: #000;
+        }
+
+        .photo-card:hover .overlay-icon {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Caption / Title Under Photo */
+        .card-details {
+            padding: 16px;
+        }
+
+        .card-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- Lightbox Modal --- */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .lightbox.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 4px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .lightbox.active .lightbox-content {
+            transform: scale(1);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+
+        .lightbox-close:hover {
+            color: var(--accent);
+        }
+
+        .lightbox-caption {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 40px;
+            border-top: 1px solid #222;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* --- Keyframe Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Mobile Adjustments --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); }
+            /* On very small screens, show 1 column. On tablets, 2 columns works well via auto-fill */
+        }
+    </style>
+
+    <!-- Schema.org Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ImageGallery",
+      "name": "Lumina Photo Gallery",
+      "description": "A curated collection of 100 high-resolution photographs including nature, architecture, and abstract art.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Lumina",
+        "sameAs": "https://www.example.com"
+      }
+    }
+    </script>
+</head>
+<body>
+
+    <header>
+        <h1>Visual Perspectives</h1>
+        <p class="subtitle">Explore a curated collection of 100 unique moments captured in time.</p>
+        
+        <div class="controls">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">Nature</button>
+            <button class="filter-btn">Architecture</button>
+            <button class="filter-btn">Tech</button>
+            <button class="filter-btn">People</button>
+        </div>
+    </header>
+
+    <main class="gallery-container">
+        <div id="gallery" class="gallery-grid">
+            <!-- Images will be injected here via JavaScript -->
+        </div>
+        
+        <!-- Loading indicator (hidden by default, logic handled by browser lazy load usually) -->
+        <div id="loader" style="text-align:center; padding: 20px; color: #555; display:none;">Loading more visuals...</div>
+    </main>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox" aria-hidden="true">
+        <button class="lightbox-close" aria-label="Close lightbox">&times;</button>
+        <img src="" alt="Full view" class="lightbox-content" id="lightbox-img">
+        <div class="lightbox-caption" id="lightbox-caption"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 Lumina Gallery. All rights reserved. | Designed for Performance & SEO.</p>
+    </footer>
+
+    <script>
+        /**
+         * Configuration & Data Generation
+         * Generating 100 items dynamically to keep code clean and efficient.
+         */
+        const TOTAL_IMAGES = 100;
+        const galleryGrid = document.getElementById('gallery');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
+        const closeBtn = document.querySelector('.lightbox-close');
+
+        // Helper to generate random pseudo-realistic titles
+        const categories = ['Nature', 'Architecture', 'Abstract', 'Urban', 'Technology'];
+        const adjectives = ['Silent', 'Vibrant', 'Eternal', 'Broken', 'Golden', 'Dark', 'Serene', 'Chaotic'];
+        const nouns = ['Horizon', 'Structure', 'Dream', 'City', 'Momentum', 'Shadow', 'Light', 'Peak'];
+
+        function generateTitle(index) {
+            const cat = categories[Math.floor(Math.random() * categories.length)];
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            return `${cat} Series: ${adj} ${noun} #${index + 1}`;
+        }
+
+        /**
+         * Build the DOM elements
+         */
+        function initGallery() {
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 1; i <= TOTAL_IMAGES; i++) {
+                // Using picsum.photos with a seed ensures the same image loads every time
+                // for a specific ID, but different IDs have different images.
+                // Width 600, Height 400 (3:2 ratio) provides good balance.
+                const imageUrl = `https://picsum.photos/seed/gallery_${i}/600/400`;
+                const fullSizeUrl = `https://picsum.photos/seed/gallery_${i}/1200/800`;
+                const title = generateTitle(i);
+                const category = categories[i % categories.length]; // Deterministic category for demo
+
+                // Semantic HTML: Figure, Figcaption
+                const article = document.createElement('article');
+                article.className = 'photo-card';
+                article.dataset.category = category;
+                article.setAttribute('role', 'button');
+                article.setAttribute('aria-label', `View ${title}`);
+                article.tabIndex = 0; // Accessible via keyboard
+
+                // HTML Structure for the card
+                article.innerHTML = `
+                    <div class="image-wrapper">
+                        <img src="${imageUrl}" alt="${title}" loading="lazy" width="600" height="400">
+                        <div class="overlay-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                        </div>
+                    </div>
+                    <div class="card-details">
+                        <div class="card-category">${category}</div>
+                        <h2 class="card-title">${title}</h2>
+                    </div>
+                `;
+
+                // Event Listener for Lightbox
+                article.addEventListener('click', () => openLightbox(fullSizeUrl, title));
+                
+                // Keyboard accessibility (Enter key)
+                article.addEventListener('keydown', (e) => {
+                    if(e.key === 'Enter') openLightbox(fullSizeUrl, title);
+                });
+
+                fragment.appendChild(article);
+            }
+
+            galleryGrid.appendChild(fragment);
+            
+            // Initialize Intersection Observer after elements are added
+            initObserver();
+        }
+
+        /**
+         * Animation: Intersection Observer for Scroll Effects
+         */
+        function initObserver() {
+            const observerOptions = {
+                root: null, // viewport
+                rootMargin: '0px',
+                threshold: 0.1 // Trigger when 10% of item is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        // Add slight staggered delay based on position index could be done here, 
+                        // but simple CSS class toggle is performant.
+                        entry.target.classList.add('visible');
+                        // Stop observing once loaded
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const cards = document.querySelectorAll('.photo-card');
+            cards.forEach(card => observer.observe(card));
+        }
+
+        /**
+         * Lightbox Logic
+         */
+        function openLightbox(src, caption) {
+            lightboxImg.src = src;
+            lightboxCaption.textContent = caption;
+            lightbox.classList.add('active');
+            lightbox.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            lightbox.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = ''; // Restore scrolling
+            setTimeout(() => {
+                lightboxImg.src = ''; // Clear src after animation to stop ghosting
+            }, 300);
+        }
+
+        // Event Listeners for Lightbox
+        closeBtn.addEventListener('click', closeLightbox);
+        
+        // Close on background click
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+                closeLightbox();
+            }
+        });
+
+        /**
+         * Initialize App
+         */
+        document.addEventListener('DOMContentLoaded', initGallery);
+
+    </script>
+</body>
+</html>
